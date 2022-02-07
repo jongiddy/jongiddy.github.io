@@ -47,7 +47,7 @@ When you look at a Rust `impl` block, such as `impl<T> Rc<T>`, it appears to imp
 
 However the `self` argument to the method plays a more significant part than expected.
 
-An `impl` block contains methods for multiple stypes that are ["associated" with the named "implementing type"](https://doc.rust-lang.org/reference/items/associated-items.html#methods).
+An `impl` block contains methods for multiple types that are ["associated" with the named "implementing type"](https://doc.rust-lang.org/reference/items/associated-items.html#methods).
 
 The `Clone` trait provides the method signature `fn clone(&self) -> Self`, shorthand for `fn clone(self: &Self) -> Self`
 
@@ -57,18 +57,18 @@ impl Clone for Rc<T> {
 	fn clone(self: &Rc<T>) -> Rc<T> {...}
 }
 ```
-This implements a `clone` method that matches the type `&Rc<T>`!
+This implements a `clone` method that matches the type `&Rc<T>`. So `Rc<T>::clone` gets called when the receiver is `&Rc<T>`, which includes `&Rc<()>`.
 
-Similarly, `impl<T> Clone for &T` implements a `clone` method matching the generic type `&&T` which includes `&&Rc<T>`.
+Similarly, `impl<T> Clone for &T` implements a `clone` method matching the generic type `&&T` which includes `&&Rc<T>`. So ``&T::clone` gets called when the receiver is `&&T`, which includes `&&Rc<()>`.
 
 There is no `clone` method that matches the type `Rc<T>`.
 
-It's not `(&a).clone()` that's behaving strange in the example. It's `a.clone()`!
+The question is not why does `&a.clone()` call `Rc::clone`. The question is why does `a.clone()` call `Rc::clone`?
 
 ---
 
-`a.clone()` works because, when the initial receiver type does not match a method, [Rust tries a chain of additional types](https://doc.rust-lang.org/reference/expressions/method-call-expr.html). The chain starts `Rc<()>`, `&Rc<()>`, `&mut Rc<()>`, and then continues through any `Deref` chain. Rust looks for a method that matches each type in the chain.
+`a.clone()` works because Rust uses a [consistent procedure to match methods against a chain of types](https://doc.rust-lang.org/reference/expressions/method-call-expr.html) derived from the receiver. The chain starts `Rc<()>`, `&Rc<()>`, `&mut Rc<()>`, and then continues through any `Deref` trait. For each type in the chain, Rust looks for a method that matches.
 
-In this case, the first candidate, `Rc<()>`, does not match any `clone` method. The second candidate, `&Rc`, does: the `Rc::clone` implementation.  So Rust creates a reference to the receiver, and passes that to the `Rc::clone` implementation, incrementing the count to 3.
+For `a.clone()` the first candidate, `Rc<()>`, does not match any `clone` method. The second candidate, `&Rc`, does: the `Rc::clone` implementation.  So Rust creates a reference to the receiver, and passes that to the `Rc::clone` implementation, incrementing the count to 3.
 
-For another example using non-standard-library types, see https://users.rust-lang.org/t/when-will-auto-deref-happen-for-receiver-in-method-call/43209
+For another example of this behaviour using non-standard-library types, see https://users.rust-lang.org/t/when-will-auto-deref-happen-for-receiver-in-method-call/43209
