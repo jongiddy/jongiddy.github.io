@@ -1,3 +1,4 @@
+# Rust method resolution
 
 The Rust reference counting `Rc` type [implements the `Clone` trait](https://doc.rust-lang.org/std/rc/struct.Rc.html#impl-Clone). Every call to `clone` increments the strong count for the `Rc` instance. This allows us to count how many times `Rc::clone` has been called.
 
