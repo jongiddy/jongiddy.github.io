@@ -1,7 +1,7 @@
 ---
 title: "Rust Method Resolution"
 date: 2022-02-14T11:19:13Z
-draft: true
+draft: false
 ---
 
 Consider this code:
