@@ -13,11 +13,13 @@ fn main() {
 	let a = Rc::new(());
 	assert!(Rc::strong_count(&a) == 1);
 
-	// Calling `a.clone()` uses the `Rc::clone` implementation and increments the count to 2.
+	// Calling `a.clone()` uses the `Rc::clone` implementation
+	// and increments the count to 2.
 	let b = a.clone();
 	assert!(Rc::strong_count(&a) == 2);
 
-	// Calling `(&&a).clone()` uses the `&T::clone` implementation and the count is unchanged.
+	// Calling `(&&a).clone()` uses the `&T::clone` implementation
+	// and the count is unchanged.
 	let c = (&&a).clone();
 	assert!(Rc::strong_count(&a) == 2);
 
@@ -42,24 +44,29 @@ The Rust shared reference type [`&T` also implements the `Clone` trait](https://
 
 ---
 
-The *receiver* for a method is the expression before the dot. For example, for `a.clone()` the receiver is `a`.
+The *receiver* for a method is the expression before the dot. With `a.clone()` the receiver is `a` with type `Rc<()>`.
+The reference count increases, showing that we called `Rc::clone`.
 
 ```rust
-	// Calling `a.clone()` uses the `Rc::clone` implementation and increments the count to 2.
+	// Calling `a.clone()` uses the `Rc::clone` implementation
+	// and increments the count to 2.
 	let b = a.clone();
 	assert!(Rc::strong_count(&a) == 2);
 }
 ```
 
-In the above code the receiver `a` has type `Rc<()>`. The reference count increases, indicating that we called `Rc::clone`.
+With `(&&a).clone()` the receiver `&&a` has type `&&Rc<()>`.
+The reference count does not increase, showing that we did not call `Rc::clone`.
+We called `&T::clone` instead, and that does not delegate to `Rc`'s `Clone` implementation.
 
 ```rust
-	// Calling `(&&a).clone()` uses the `&T::clone` implementation and the count is unchanged.
+	// Calling `(&&a).clone()` uses the `&T::clone` implementation
+	// and the count is unchanged.
 	let c = (&&a).clone();
 	assert!(Rc::strong_count(&a) == 2);
 ```
 
-In the above code the receiver `&&a` has type `&&Rc<()>`. The reference count does not increase, indicating that we did not call `Rc::clone`. We called `&T::clone` instead, and, as we know, that does not delegate to `Rc`'s `Clone` implementation.
+The question is what happens when we call `(&a).clone()`?
 
 ```rust
 	// What happens when we call `(&a).clone()`?
@@ -67,12 +74,11 @@ In the above code the receiver `&&a` has type `&&Rc<()>`. The reference count do
 	dbg!(Rc::strong_count(&a));
 ```
 
-The question is what happens when we call `(&a).clone()`?
 The receiver has type `&Rc<()>`. This type does not match `Rc<T>`. It does match `&T`, where `T` is `Rc<()>`.
 
 The intuitive answer is that `(&a).clone()` calls the `&T::clone` implementation, the count remains unchanged, and the code prints `Rc::strong_count(&a) = 2`.
 
-So it might seem surprising that running the code prints `Rc::strong_count(&a) = 3`.
+But the code does in fact print `Rc::strong_count(&a) = 3`, showing that it calls `Rc::clone`.
 
 When you look at a Rust `impl` block, such as `impl<T> Rc<T> {}`, it appears to implement methods for a single (possibly generic) receiver type (`Rc<T>`), and the different forms for methods (`self, &self, &mut self`) indicate how the receiver is borrowed in the method.
 
@@ -99,7 +105,9 @@ impl Clone for Rc<T> {
 	fn clone(self: &Rc<T>) -> Rc<T> {...}
 }
 ```
-This `clone` method matches the type `&Rc<T>`. So `Rc<T>::clone` gets called when the receiver is `&Rc<T>`, including for `&Rc<()>`.
+
+The implementing type is `Rc<T>` but the method `clone` is implemented for the associated type `&Rc<T>`.
+So `Rc<T>::clone` gets called when the receiver is `&Rc<T>`, including for `&Rc<()>`.
 
 Similarly, `impl<T> Clone for &T` implements a `clone` method matching the generic type `&&T`. So `&T::clone` gets called when the receiver is `&&T`, which includes `&&Rc<()>`.
 
