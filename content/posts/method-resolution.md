@@ -95,7 +95,7 @@ This helps understand this [section of the docs](https://doc.rust-lang.org/refer
 
 ---
 
-What this means is that an `impl` block can define methods for multiple types. These types are related to the type named in the `impl` block. For example, an `impl<T> Rc<T>` block can define methods for `Rc<T>`, `&Rc<T>`, `&mut Rc<T>`, `Box<Rc<T>>`, `Rc<Rc<T>>`, `Arc<Rc<T>>`, `Pin<Rc<T>>`, and also combinations such as `&Box<Pin<Rc<T>>>`.
+What this means is that an `impl` block can define methods for multiple types. These types are related to the type named in the `impl` block. For example, an `impl<T> Rc<T>` block can define methods for `Rc<T>`, `&Rc<T>`, `&mut Rc<T>`, `Box<Rc<T>>`, `Rc<Rc<T>>`, `Arc<Rc<T>>`, `Pin<Rc<T>>`, and also combinations such as `&Pin<Box<Rc<T>>>`.
 
 The `Clone` trait defines the method signature `fn clone(&self) -> Self`, shorthand for `fn clone(self: &Self) -> Self`
 
