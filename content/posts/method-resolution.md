@@ -30,12 +30,17 @@ fn main() {
 
 The Rust reference counting type [`Rc` implements the `Clone` trait](https://doc.rust-lang.org/std/rc/struct.Rc.html#impl-Clone). Every call to `clone` increments the strong count for the `Rc` instance. This allows us to count how many times `Rc::clone` has been called.
 
+---
 ![Rc::Clone](/rc-clone-doc.png)
+
+---
 
 The Rust shared reference type [`&T` also implements the `Clone` trait](https://doc.rust-lang.org/std/primitive.reference.html#trait-implementations-1). (`T` can be any type including `Rc`). Note that the documentation for `&T` points out that "this will not defer to T’s Clone implementation".
 
+---
 ![&T::Clone](/ref-clone-doc.png)
 
+---
 
 The *receiver* for a method is the expression before the dot. For example, for `a.clone()` the receiver is `a`.
 
@@ -69,8 +74,6 @@ The intuitive answer is that `(&a).clone()` calls the `&T::clone` implementation
 
 So it might seem surprising that running the code prints `Rc::strong_count(&a) = 3`.
 
----
-
 When you look at a Rust `impl` block, such as `impl<T> Rc<T> {}`, it appears to implement methods for a single (possibly generic) receiver type (`Rc<T>`), and the different forms for methods (`self, &self, &mut self`) indicate how the receiver is borrowed in the method.
 
 However the `self` argument to the method plays a more significant part than expected.
@@ -79,11 +82,14 @@ First, it's useful to know that the ubiquitous method parameters `&self` and `&m
 
 ![Shorthand Self](/self-shorthand.png)
 
-An `impl` block contains methods for multiple types that are ["associated" with the named "implementing type"](https://doc.rust-lang.org/reference/items/associated-items.html#methods).
+This helps understand this [section of the docs](https://doc.rust-lang.org/reference/items/associated-items.html#methods):
 
+---
 ![Self Types](/self-types.png)
 
-What this means is that an `impl` block can define methods for multiple types. However, these types are related to the type that the `impl` block is for. An `impl<T> Rc<T>` block can define methods for `Rc<T>`, `&Rc<T>`, `&mut Rc<T>`, `Box<Rc<T>>`, `Rc<Rc<T>>`, `Arc<Rc<T>>`, `Pin<Rc<T>>`, and also combinations such as `&Box<Pin<Rc<T>>>`.
+---
+
+What this means is that an `impl` block can define methods for multiple types. These types are related to the type named in the `impl` block. For example, an `impl<T> Rc<T>` block can define methods for `Rc<T>`, `&Rc<T>`, `&mut Rc<T>`, `Box<Rc<T>>`, `Rc<Rc<T>>`, `Arc<Rc<T>>`, `Pin<Rc<T>>`, and also combinations such as `&Box<Pin<Rc<T>>>`.
 
 The `Clone` trait defines the method signature `fn clone(&self) -> Self`, shorthand for `fn clone(self: &Self) -> Self`
 
@@ -101,14 +107,17 @@ There is no `clone` method for the type `Rc<T>`.
 
 So our question above was misplaced. It is not why does `&a.clone()` call `Rc::clone`. The real question is why does `a.clone()` call `Rc::clone` when `Rc<()>` does not have a `clone` method?
 
+`a.clone()` works because Rust uses a [procedure that matches methods against a chain of types](https://doc.rust-lang.org/reference/expressions/method-call-expr.html) derived from the receiver.
+
 ---
-
-`a.clone()` works because Rust uses a [consistent procedure to match methods against a chain of types](https://doc.rust-lang.org/reference/expressions/method-call-expr.html) derived from the receiver.
-
 ![Method Resolution](/method-resolution.png)
+
+---
 
 For `Rc<()>` the chain starts `Rc<()>`, `&Rc<()>`, `&mut Rc<()>`, and then derefs to `()`, `&()`, and `&mut ()`. For each type in the chain, Rust looks for a method that matches.
 
-For `a.clone()` the first candidate, `Rc<()>`, does not match any `clone` method. So we move on. The second candidate, `&Rc<()>`, does: the `Rc::clone` implementation.  So Rust creates a reference to the receiver, and passes that to the `Rc::clone` implementation, incrementing the count to 3.
+For `a.clone()` the first candidate, `Rc<()>`, does not match any `clone` method. So we move on.
+
+The second candidate, `&Rc<()>`, does: the `Rc::clone` implementation.  So Rust creates a reference to the receiver, and passes that to the `Rc::clone` implementation, incrementing the count to 3.
 
 For another example of this behaviour, using non-standard-library types, see https://users.rust-lang.org/t/when-will-auto-deref-happen-for-receiver-in-method-call/43209
