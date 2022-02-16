@@ -136,4 +136,4 @@ For `a.clone()` the first candidate, `Rc<()>`, does not match any `clone` method
 
 The second candidate, `&Rc<()>`, does: the `Rc::clone` implementation.  So Rust creates a reference to the receiver, and passes that to the `Rc::clone` implementation, incrementing the count to 3.
 
-For another example of this behaviour, using non-standard-library types, see https://users.rust-lang.org/t/when-will-auto-deref-happen-for-receiver-in-method-call/43209
+If this example has too much reference counting and not enough dogs, then this [`users.rust-lang.org` post](https://users.rust-lang.org/t/when-will-auto-deref-happen-for-receiver-in-method-call/43209) is for you!
