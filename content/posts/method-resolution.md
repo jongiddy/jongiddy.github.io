@@ -78,7 +78,9 @@ The receiver has type `&Rc<()>`. This type does not match `Rc<T>`. It does match
 
 The intuitive answer is that `(&a).clone()` calls the `&T::clone` implementation, the count remains unchanged, and the code prints `Rc::strong_count(&a) = 2`.
 
-But the code does in fact print `Rc::strong_count(&a) = 3`, showing that it calls `Rc::clone`.
+But running this code prints `Rc::strong_count(&a) = 3`, showing that it does, in fact, call `Rc::clone`.
+
+---
 
 When you look at a Rust `impl` block, such as `impl<T> Rc<T> {}`, it appears to implement methods for a single (possibly generic) receiver type (`Rc<T>`), and the different forms for methods (`self, &self, &mut self`) indicate how the receiver is borrowed in the method.
 
