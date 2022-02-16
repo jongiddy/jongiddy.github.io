@@ -111,9 +111,17 @@ So `Rc<T>::clone` gets called when the receiver is `&Rc<T>`, including for `&Rc<
 
 Similarly, `impl<T> Clone for &T` implements a `clone` method matching the generic type `&&T`. So `&T::clone` gets called when the receiver is `&&T`, which includes `&&Rc<()>`.
 
+```rust
+impl Clone for &T {
+	fn clone(self: &&T) -> &T {...}
+}
+```
+
 There is no `clone` method for the type `Rc<T>`.
 
-So our question above was misplaced. It is not why does `&a.clone()` call `Rc::clone`. The real question is why does `a.clone()` call `Rc::clone` when `Rc<()>` does not have a `clone` method?
+So our question above was misplaced. It is not why does `&a.clone()` call `Rc::clone`.
+
+The real question is why does `a.clone()` call `Rc::clone` when `Rc<()>` does not have a `clone` method?
 
 `a.clone()` works because Rust uses a [procedure that matches methods against a chain of types](https://doc.rust-lang.org/reference/expressions/method-call-expr.html) derived from the receiver.
 
@@ -122,7 +130,7 @@ So our question above was misplaced. It is not why does `&a.clone()` call `Rc::c
 
 ---
 
-For `Rc<()>` the chain starts `Rc<()>`, `&Rc<()>`, `&mut Rc<()>`, and then derefs to `()`, `&()`, and `&mut ()`. For each type in the chain, Rust looks for a method that matches.
+For `Rc<()>` the chain starts `Rc<()>, &Rc<()>, &mut Rc<()>`, and then continues through `Deref` to `(), &(), &mut ()`. For each type in the chain, Rust looks for a method that matches.
 
 For `a.clone()` the first candidate, `Rc<()>`, does not match any `clone` method. So we move on.
 
