@@ -4,6 +4,10 @@ date: 2022-02-14T11:19:13Z
 draft: false
 ---
 
+Rust has many ergonomic features that make common patterns simpler, but can also cause
+confusion because they increase the inconsistency of the language, or feel counter-intuitive
+in some cases.
+
 Consider this code:
 ```rust
 use std::rc::Rc;
@@ -86,7 +90,7 @@ When you look at a Rust `impl` block, such as `impl<T> Rc<T> {}`, it appears to 
 
 However the `self` argument to the method plays a more significant part than expected.
 
-First, it's useful to know that the ubiquitous method parameters `&self` and `&mut self` are syntactic sugar to combine a parameter called `self` with the parameter's type:
+First, it's useful to know that the ubiquitous method parameters `&self` and `&mut self` are syntactic sugar to combine a parameter called `self` with the parameter's type (another ergonomic feature that increases inconsistency, but simplifies a common pattern):
 
 ![Shorthand Self](/self-shorthand.png)
 
