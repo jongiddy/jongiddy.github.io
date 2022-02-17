@@ -73,7 +73,6 @@ We called `&T::clone` instead, and that does not delegate to `Rc`'s `Clone` impl
 The question is what happens when we call `(&a).clone()`?
 
 ```rust
-	// What happens when we call `(&a).clone()`?
 	let d = (&a).clone();
 	dbg!(Rc::strong_count(&a));
 ```
@@ -115,7 +114,7 @@ impl Clone for Rc<T> {
 The implementing type is `Rc<T>` but the method `clone` is implemented for the associated type `&Rc<T>`.
 So `Rc<T>::clone` gets called when the receiver is `&Rc<T>`, including for `&Rc<()>`.
 
-Similarly, `impl<T> Clone for &T` implements a `clone` method matching the generic type `&&T`. So `&T::clone` gets called when the receiver is `&&T`, which includes `&&Rc<()>`.
+Similarly, `impl<T> Clone for &T` implements a `clone` method matching the generic type `&&T`.
 
 ```rust
 impl Clone for &T {
@@ -123,7 +122,9 @@ impl Clone for &T {
 }
 ```
 
-There is no `clone` method for the type `Rc<T>`.
+So `&T::clone` gets called when the receiver is `&&T`, which includes `&&Rc<()>`.
+
+Note that there is no `clone` method for the type `Rc<T>`.
 
 So our question above was misplaced. It is not why does `&a.clone()` call `Rc::clone`.
 
@@ -140,17 +141,21 @@ For `Rc<()>` the chain starts `Rc<()>, &Rc<()>, &mut Rc<()>`, and then continues
 
 For `a.clone()` the first candidate, `Rc<()>`, does not match any `clone` method. So we move on.
 
-The second candidate, `&Rc<()>`, does: the `Rc::clone` implementation.  So Rust creates a reference to the receiver, and passes that to the `Rc::clone` implementation, incrementing the count to 3.
+The second candidate, `&Rc<()>` matches the `Rc::clone` implementation.  So Rust stops here, creates a reference to the receiver, and passes that to the `Rc::clone` implementation, incrementing the count to 3.
 
 ---
 
-Some more examples of confusion around references and method resolution:
+Some more examples of this confusion around references and method resolution:
 
-If this example has too much reference counting and not enough dogs, then this [`users.rust-lang.org` post](https://users.rust-lang.org/t/when-will-auto-deref-happen-for-receiver-in-method-call/43209) is for you!
+- If my example has too much reference counting and not enough dogs, then this [`users.rust-lang.org` post](https://users.rust-lang.org/t/when-will-auto-deref-happen-for-receiver-in-method-call/43209) is for you!
 
-The docs above describing the creation of the chain also describe a preference for inherent methods (defined in an `impl Type` block) over trait methods (defined in an `impl Trait for Type` block).
+- The docs above describing the creation of the chain also describe a preference for inherent methods (defined in an `impl Type` block) over trait methods (defined in an `impl Trait for Type` block).
 See this [`users.rust-lang.org` post](https://users.rust-lang.org/t/method-call-resolution-behaviour/59492) for an example where this is relevant.
 Both methods in this post have a `self` type of `&Foo`.
 Hence they are at the same position in the chain, and the inherent method wins.
 
 Note that the common pattern for confusion here is expecting method resolution to proceed using the implementing type named in the `impl` block rather than the type of `self` in the method.
+
+The key to understanding method resolution in Rust is:
+1. Know how the candidate chain is created from the receiver type in the method call.
+2. Look at the type of `self` in each method rather than the implementing type named in the `impl` block.
