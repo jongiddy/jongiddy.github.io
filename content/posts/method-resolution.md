@@ -157,5 +157,7 @@ Hence they are at the same position in the chain, and the inherent method wins.
 Note that the common pattern for confusion here is expecting method resolution to proceed using the implementing type named in the `impl` block rather than the type of `self` in the method.
 
 The key to understanding method resolution in Rust is:
+
 1. Know how the candidate chain is created from the receiver type in the method call.
+
 2. Look at the type of `self` in each method rather than the implementing type named in the `impl` block.
