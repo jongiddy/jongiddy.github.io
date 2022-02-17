@@ -142,4 +142,15 @@ For `a.clone()` the first candidate, `Rc<()>`, does not match any `clone` method
 
 The second candidate, `&Rc<()>`, does: the `Rc::clone` implementation.  So Rust creates a reference to the receiver, and passes that to the `Rc::clone` implementation, incrementing the count to 3.
 
+---
+
+Some more examples of confusion around references and method resolution:
+
 If this example has too much reference counting and not enough dogs, then this [`users.rust-lang.org` post](https://users.rust-lang.org/t/when-will-auto-deref-happen-for-receiver-in-method-call/43209) is for you!
+
+The docs above describing the creation of the chain also describe a preference for inherent methods (defined in an `impl Type` block) over trait methods (defined in an `impl Trait for Type` block).
+See this [`users.rust-lang.org` post](https://users.rust-lang.org/t/method-call-resolution-behaviour/59492) for an example where this is relevant.
+Both methods in this post have a `self` type of `&Foo`.
+Hence they are at the same position in the chain, and the inherent method wins.
+
+Note that the common pattern for confusion here is expecting method resolution to proceed using the implementing type named in the `impl` block rather than the type of `self` in the method.
